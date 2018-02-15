@@ -63,6 +63,8 @@ int blake2b_final(blake2b_state *S, void *out, size_t outlen);
 /* Simple API */
 int blake2b(void *out, const void *in, const void *key, size_t keylen);
 
+void blake2b_hash(const char* input, char* output, uint32_t len);
+
 /* Argon2 Team - Begin Code */
 int blake2b_long(void *out, const void *in);
 /* Argon2 Team - End Code */

@@ -1,7 +1,7 @@
 
 #include "stratum.h"
 
-//#define CLIENT_DEBUGLOG_
+#define CLIENT_DEBUGLOG_
 
 bool client_suggest_difficulty(YAAMP_CLIENT *client, json_value *json_params)
 {
@@ -89,7 +89,7 @@ bool client_subscribe(YAAMP_CLIENT *client, json_value *json_params)
 			client1->lock_count = 0;
 
 #ifdef CLIENT_DEBUGLOG_
-			debuglog("reconnecting client locked to %x\n", client->jobid_next);
+			debuglog("client.cpp: reconnecting client locked to %x\n", client->jobid_next);
 #endif
 		}
 
@@ -107,7 +107,7 @@ bool client_subscribe(YAAMP_CLIENT *client, json_value *json_params)
 				client1->lock_count = 0;
 
 #ifdef CLIENT_DEBUGLOG_
-				debuglog("reconnecting2 client\n");
+				debuglog("client.cpp: reconnecting2 client\n");
 #endif
 			}
 		}
@@ -117,7 +117,7 @@ bool client_subscribe(YAAMP_CLIENT *client, json_value *json_params)
 	client->extranonce2size_last = client->extranonce2size;
 
 #ifdef CLIENT_DEBUGLOG_
-	debuglog("new client with nonce %s\n", client->extranonce1);
+	debuglog("client.cpp: new client with nonce %s\n", client->extranonce1);
 #endif
 
 	client_send_result(client, "[[[\"mining.set_difficulty\",\"%.3g\"],[\"mining.notify\",\"%s\"]],\"%s\",%d]",
@@ -237,7 +237,7 @@ bool client_authorize(YAAMP_CLIENT *client, json_value *json_params)
 	client_initialize_difficulty(client);
 
 #ifdef CLIENT_DEBUGLOG_
-	debuglog("new client %s, %s, %s\n", client->username, client->password, client->version);
+	debuglog("client.cpp: new client %s, %s, %s\n", client->username, client->password, client->version);
 #endif
 
 	if(!client->userid || !client->workerid)
@@ -306,7 +306,7 @@ bool client_update_block(YAAMP_CLIENT *client, json_value *json_params)
 	const char* hash = json_params->u.array.values[2]->u.string.ptr;
 
 #ifdef CLIENT_DEBUGLOG_
-	debuglog("notify: new %s block %s\n", coind->symbol, hash);
+	debuglog("client.cpp: notify: new %s block %s\n", coind->symbol, hash);
 #endif
 
 	coind->newblock = true;
@@ -518,6 +518,7 @@ void *client_thread(void *p)
 	}
 	memset(client, 0, sizeof(YAAMP_CLIENT));
 
+	client->logtraffic = true;
 	client->reconnectable = true;
 	client->speed = 1;
 	client->created = time(NULL);
@@ -579,7 +580,7 @@ void *client_thread(void *p)
 		}
 
 #ifdef CLIENT_DEBUGLOG_
-		debuglog("client %s %d %s\n", method, client->id_int, client->id_str? client->id_str: "null");
+		debuglog("client.cpp: client %s %d %s\n", method, client->id_int, client->id_str? client->id_str: "null");
 #endif
 
 		bool b = false;
@@ -637,7 +638,7 @@ void *client_thread(void *p)
 //	source_close(client->source);
 
 #ifdef CLIENT_DEBUGLOG_
-	debuglog("client terminate\n");
+	debuglog("client.cpp: client terminate\n");
 #endif
 	if(!client || client->deleted) {
 		pthread_exit(NULL);

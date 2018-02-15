@@ -1,7 +1,7 @@
 
 #include "stratum.h"
 
-//#define SOCKET_DEBUGLOG_
+#define SOCKET_DEBUGLOG_
 
 bool socket_connected(YAAMP_SOCKET *s)
 {
@@ -69,7 +69,7 @@ YAAMP_SOCKET *socket_initialize(int sock)
 void socket_close(YAAMP_SOCKET *s)
 {
 #ifdef SOCKET_DEBUGLOG_
-	debuglog("socket_close\n");
+	debuglog("socket.cpp: socket_close\n");
 #endif
 
 	if(!s) return;
@@ -135,7 +135,10 @@ json_value *socket_nextjson(YAAMP_SOCKET *s, YAAMP_CLIENT *client)
 	*p = 0;
 
 	if(client && client->logtraffic)
-		stratumlog("%s, %s, %s, %s, recv: %s\n", client->sock->ip, client->username, client->password, g_current_algo->name, s->buffer);
+		stratumlog("socket.cpp: %s, %s, %s, %s, recv: %s\n", client->sock->ip, client->username, client->password, g_current_algo->name, s->buffer);
+#ifdef SOCKET_DEBUGLOG_
+	debuglog("socket.cpp: received: %s\n", s->buffer);
+#endif
 
 	int bytes = strlen(b);
 
@@ -175,7 +178,7 @@ json_value *socket_nextjson(YAAMP_SOCKET *s, YAAMP_CLIENT *client)
 int socket_send_raw(YAAMP_SOCKET *s, const char *buffer, int size)
 {
 #ifdef SOCKET_DEBUGLOG_
-	debuglog("socket send: %s", buffer);
+	debuglog("socket.cpp: socket send: %s", buffer);
 #endif
 
 	int res = send(s->sock, buffer, size, MSG_NOSIGNAL);

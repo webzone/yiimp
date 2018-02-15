@@ -1,7 +1,7 @@
 
 #include "stratum.h"
 
-//#define RPC_DEBUGLOG_
+#define RPC_DEBUGLOG_
 
 bool rpc_connected(YAAMP_RPC *rpc)
 {
@@ -38,7 +38,7 @@ bool rpc_connect(YAAMP_RPC *rpc)
 	rpc->bufpos = 0;
 
 #ifdef RPC_DEBUGLOG_
-	debuglog("connected to %s:%d\n", rpc->host, rpc->port);
+	debuglog("rpc.cpp: connected to %s:%d\n", rpc->host, rpc->port);
 #endif
 
 	return true;
@@ -53,7 +53,7 @@ void rpc_close(YAAMP_RPC *rpc)
 	rpc->sock = 0;
 
 #ifdef RPC_DEBUGLOG_
-	debuglog("disconnected from %s:%d\n", rpc->host, rpc->port);
+	debuglog("rpc.cpp disconnected from %s:%d\n", rpc->host, rpc->port);
 #endif
 }
 
@@ -67,7 +67,7 @@ int rpc_send_raw(YAAMP_RPC *rpc, const char *buffer, int bytes)
 	if(res <= 0) return res;
 
 #ifdef RPC_DEBUGLOG_
-	debuglog("sending >%s<\n", buffer);
+	debuglog("rpc.cpp sending >%s<\n", buffer);
 #endif
 
 	return res;
@@ -149,11 +149,11 @@ char *rpc_do_call(YAAMP_RPC *rpc, char const *data)
 	{
 		int bytes = recv(rpc->sock, buffer+bufpos, YAAMP_SMALLBUFSIZE-bufpos-1, 0);
 #ifdef RPC_DEBUGLOG_
-		debuglog("got %s\n", buffer+bufpos);
+		debuglog("rpc.cpp got %s\n", buffer+bufpos);
 #endif
 		if(bytes <= 0)
 		{
-			debuglog("ERROR: recv1, %d, %d, %s, %s\n", bytes, errno, data, buffer);
+			debuglog("rpc.cpp ERROR: recv1, %d, %d, %s, %s\n", bytes, errno, data, buffer);
 			CommonUnlock(&rpc->mutex);
 			return NULL;
 		}
@@ -175,14 +175,14 @@ char *rpc_do_call(YAAMP_RPC *rpc, char const *data)
 
 	int status = atoi(p+1);
 	if(status != 200)
-		debuglog("ERROR: rpc_do_call: %s:%d %d\n", rpc->host, rpc->port, status);
+		debuglog("rpc.cpp ERROR: rpc_do_call: %s:%d %d\n", rpc->host, rpc->port, status);
 
 	char tmp[1024];
 
 	header_value(buffer, "Transfer-Encoding:", tmp);
 	if (!strcmp(tmp, "chunked")) {
 #ifdef HAVE_CURL
-		if (!rpc->curl) debuglog("%s chunked transfer detected, switching to curl!\n",
+		if (!rpc->curl) debuglog("rpc.cpp: %s chunked transfer detected, switching to curl!\n",
 			rpc->coind->symbol);
 		rpc->curl = 1;
 #endif
@@ -194,7 +194,7 @@ char *rpc_do_call(YAAMP_RPC *rpc, char const *data)
 	int datalen = atoi(header_value(buffer, "Content-Length:", tmp));
 	if(!datalen)
 	{
-		debuglog("ERROR: rpc No Content-Length header!\n");
+		debuglog("rpc.cpp: ERROR: rpc No Content-Length header!\n");
 		CommonUnlock(&rpc->mutex);
 		return NULL;
 	}
@@ -216,7 +216,7 @@ char *rpc_do_call(YAAMP_RPC *rpc, char const *data)
 		int bytes = recv(rpc->sock, databuf+bufpos, datalen-bufpos, 0);
 		if(bytes <= 0)
 		{
-			debuglog("ERROR: recv2, %d, %d, %s\n", bytes, errno, data);
+			debuglog("rpc.cpp: ERROR: recv2, %d, %d, %s\n", bytes, errno, data);
 			rpc_connect(rpc);
 
 			free(databuf);
@@ -269,7 +269,7 @@ json_value *rpc_call(YAAMP_RPC *rpc, char const *method, char const *params)
 
 	json_value *json = json_parse(buffer, strlen(buffer));
 	if(!json) {
-		debuglog("invalid json: %s", buffer);
+		debuglog("rpc.cpp: invalid json: %s", buffer);
 		free(buffer);
 		return NULL;
 	}
@@ -277,7 +277,7 @@ json_value *rpc_call(YAAMP_RPC *rpc, char const *method, char const *params)
 
 	int s2 = current_timestamp();
 	if(s2-s1 > 2000)
-		debuglog("delay rpc_call %s:%d %s in %d ms\n", rpc->host, rpc->port, method, s2-s1);
+		debuglog("rpc.cpp: delay rpc_call %s:%d %s in %d ms\n", rpc->host, rpc->port, method, s2-s1);
 
 	if(json->type != json_object)
 	{

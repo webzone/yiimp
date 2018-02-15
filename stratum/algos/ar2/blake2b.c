@@ -256,6 +256,18 @@ int blake2b(void *out, const void *in, const void *key, size_t keylen)
     return 0;
 }
 
+void blake2b_hash(const char* input, char* output, uint32_t len)
+{
+	uint8_t hash[BLAKE2B_OUTBYTES];
+	blake2b_state blake2_ctx;
+
+	blake2b_init(&blake2_ctx, BLAKE2B_OUTBYTES);
+	blake2b_update(&blake2_ctx, input, len);
+	blake2b_final(&blake2_ctx, hash, BLAKE2B_OUTBYTES);
+
+	memcpy(output, hash, 64);
+}
+
 void blake2b_too(void *pout, const void *in)
 {
     uint8_t *out = (uint8_t *)pout;

@@ -3,8 +3,8 @@
 
 uint64_t lyra2z_height = 0;
 
-//#define MERKLE_DEBUGLOG
-//#define HASH_DEBUGLOG_
+#define MERKLE_DEBUGLOG
+#define HASH_DEBUGLOG_
 //#define DONTSUBMIT
 
 void build_submit_values(YAAMP_JOB_VALUES *submitvalues, YAAMP_JOB_TEMPLATE *templ,
@@ -30,7 +30,7 @@ void build_submit_values(YAAMP_JOB_VALUES *submitvalues, YAAMP_JOB_TEMPLATE *tem
 	ser_string_be(merkleroot.c_str(), submitvalues->merkleroot_be, 8);
 
 #ifdef MERKLE_DEBUGLOG
-	printf("merkle root %s\n", merkleroot.c_str());
+	debuglog("client_submit.cpp: merkle root %s\n", merkleroot.c_str());
 #endif
 	if (!strcmp(g_current_algo->name, "lbry")) {
 		sprintf(submitvalues->header, "%s%s%s%s%s%s%s", templ->version, templ->prevhash_be, submitvalues->merkleroot_be,
@@ -42,6 +42,9 @@ void build_submit_values(YAAMP_JOB_VALUES *submitvalues, YAAMP_JOB_TEMPLATE *tem
 		ser_string_be(submitvalues->header, submitvalues->header_be, 20);
 	}
 
+#ifdef MERKLE_DEBUGLOG
+	debuglog("client_submit.cppi 46: submitvalues->header_be: %s\n", submitvalues->header_be);
+#endif
 	binlify(submitvalues->header_bin, submitvalues->header_be);
 
 //	printf("%s\n", submitvalues->header_be);
@@ -50,6 +53,9 @@ void build_submit_values(YAAMP_JOB_VALUES *submitvalues, YAAMP_JOB_TEMPLATE *tem
 
 	hexlify(submitvalues->hash_hex, submitvalues->hash_bin, 32);
 	string_be(submitvalues->hash_hex, submitvalues->hash_be);
+#ifdef MERKLE_DEBUGLOG
+	debuglog("client_submit.cpp 57: submitvalues->hash_be: %s\n", submitvalues->hash_be);
+#endif
 }
 
 /////////////////////////////////////////////
@@ -281,14 +287,14 @@ static void client_do_submit(YAAMP_CLIENT *client, YAAMP_JOB *job, YAAMP_JOB_VAL
 
 #ifdef HASH_DEBUGLOG_
 			debuglog("--------------------------------------------------------------\n");
-			debuglog("hash1 %s\n", hash1);
-			debuglog("hash2 %s\n", submitvalues->hash_be);
+			debuglog("client_submit.cpp: hash1 %s\n", hash1);
+			debuglog("client_submit.cpp: hash2 %s\n", submitvalues->hash_be);
 #endif
 		}
 
 		else {
-			debuglog("*** REJECTED :( %s block %d %d txs\n", coind->name, templ->height, templ->txcount);
-			rejectlog("REJECTED %s block %d\n", coind->symbol, templ->height);
+			debuglog("client_submit.cpp: REJECTED :( %s block %d %d txs\n", coind->name, templ->height, templ->txcount);
+			rejectlog("client_submit.cpp: REJECTED %s block %d\n", coind->symbol, templ->height);
 #ifdef HASH_DEBUGLOG_
 			//debuglog("block %s\n", block_hex);
 			debuglog("--------------------------------------------------------------\n");
@@ -301,7 +307,7 @@ static void client_do_submit(YAAMP_CLIENT *client, YAAMP_JOB *job, YAAMP_JOB_VAL
 
 bool dump_submit_debug(const char *title, YAAMP_CLIENT *client, YAAMP_JOB *job, char *extranonce2, char *ntime, char *nonce)
 {
-	debuglog("ERROR %s, %s subs %d, job %x, %s, id %x, %d, %s, %s %s\n",
+	debuglog("client_submit.cpp line 304: ERROR title='%s',ip address='%s' subscribe='%d', jobid='%x', extranonce1='%s', extranonce1_id='%x', extranonce2size='%d', extranonce2='%s', ntime='%s' nonce='%s'\n",
 		title, client->sock->ip, client->extranonce_subscribe, job? job->id: 0, client->extranonce1,
 		client->extranonce1_id, client->extranonce2size, extranonce2, ntime, nonce);
 }
@@ -372,7 +378,7 @@ bool client_submit(YAAMP_CLIENT *client, json_value *json_params)
 		strncpy(vote, json_params->u.array.values[5]->u.string.ptr, 7);
 
 #ifdef HASH_DEBUGLOG_
-	debuglog("submit %s (uid %d) %d, %s, %s, %s\n", client->sock->ip, client->userid, jobid, extranonce2, ntime, nonce);
+	debuglog("client_submit.cpp line 375: client submit ipaddress='%s' (userid='%d') jobid='%d', extranonce2='%s', ntime='%s', nonce='%s'\n", client->sock->ip, client->userid, jobid, extranonce2, ntime, nonce);
 #endif
 
 	string_lower(extranonce2);
@@ -470,12 +476,15 @@ bool client_submit(YAAMP_CLIENT *client, json_value *json_params)
 	if (templ->height && !strcmp(g_current_algo->name,"lyra2z")) {
 		lyra2z_height = templ->height;
 	}
+#ifdef HASH_DEBUGLOG_
+		debuglog("client_submit.cpp line 474: built4check submitvalues.hash_be: %s\n", submitvalues.hash_be);
+#endif
 
 	// minimum hash diff begins with 0000, for all...
 	uint8_t pfx = submitvalues.hash_bin[30] | submitvalues.hash_bin[31];
 	if(pfx) {
 #ifdef HASH_DEBUGLOG_
-		debuglog("Possible %s error, hash starts with %02x%02x%02x%02x\n", g_current_algo->name,
+		debuglog("client_submit.cpp: Possible %s error, hash starts(not begins with 0000) with %02x%02x%02x%02x\n", g_current_algo->name,
 			(int) submitvalues.hash_bin[31], (int) submitvalues.hash_bin[30],
 			(int) submitvalues.hash_bin[29], (int) submitvalues.hash_bin[28]);
 #endif
@@ -489,13 +498,13 @@ bool client_submit(YAAMP_CLIENT *client, json_value *json_params)
 	if (templ->nbits && !coin_target) coin_target = 0xFFFF000000000000ULL;
 
 #ifdef HASH_DEBUGLOG_
-	debuglog("%016llx actual\n", hash_int);
-	debuglog("%016llx target\n", user_target);
-	debuglog("%016llx coin\n", coin_target);
+	debuglog("client_submt.cpp: real hash difficulty is %016llx actual\n", hash_int);
+	debuglog("client_submit.cpp: user target difficulty is %016llx target\n", user_target);
+	debuglog("client_submit.cpp: coin target difficulty is %016llx coin\n", coin_target);
 #endif
 	if(hash_int > user_target && hash_int > coin_target)
 	{
-		client_submit_error(client, job, 26, "Low difficulty share", extranonce2, ntime, nonce);
+		client_submit_error(client, job, 26, "Low difficulty share. actual has difficulty >  user target and coin target difficulty", extranonce2, ntime, nonce);
 		return true;
 	}
 
@@ -521,7 +530,7 @@ bool client_submit(YAAMP_CLIENT *client, json_value *json_params)
 #ifndef HASH_DEBUGLOG_
 	// only log a few...
 	if (share_diff > (client->difficulty_actual * 16))
-		debuglog("submit %s (uid %d) %d, %s, %s, %s, %.3f/%.3f\n", client->sock->ip, client->userid,
+		debuglog("client_submit.cpp: submit ipaddress='%s', (userid='%d') jobid='%d', extranonce2='%s', ntime='%s', nonce='%s', share_diff='%.3f/%.3f'\n", client->sock->ip, client->userid,
 			jobid, extranonce2, ntime, nonce, share_diff, client->difficulty_actual);
 #endif
 

@@ -1,7 +1,7 @@
 
 #include "stratum.h"
 
-//#define REMOTE_DEBUGLOG_
+#define REMOTE_DEBUGLOG_
 
 bool remote_can_mine(YAAMP_REMOTE *remote)
 {
@@ -41,7 +41,7 @@ bool remote_connected(YAAMP_REMOTE *remote)
 void remote_close(YAAMP_REMOTE *remote)
 {
 #ifdef REMOTE_DEBUGLOG_
-	debuglog("remote_close JOB%d\n", remote->id);
+	debuglog("remote.cpp: remote_close JOB%d\n", remote->id);
 #endif
 
 	remote->difficulty_actual = 0;
@@ -66,7 +66,7 @@ bool remote_connect(YAAMP_REMOTE *remote)
 		remote_close(remote);
 
 #ifdef REMOTE_DEBUGLOG_
-	debuglog("connecting to %s:%d JOB%d\n", remote->host, remote->port, remote->id);
+	debuglog("remote.cpp: connecting to %s:%d JOB%d\n", remote->host, remote->port, remote->id);
 #endif
 
     int sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -86,7 +86,7 @@ bool remote_connect(YAAMP_REMOTE *remote)
 	if(res < 0)
 	{
 #ifdef REMOTE_DEBUGLOG_
-		debuglog("cant connect to %s:%d JOB%d\n", remote->host, remote->port, remote->id);
+		debuglog("remote.cpp: cant connect to %s:%d JOB%d\n", remote->host, remote->port, remote->id);
 #endif
 		return false;
 	}
